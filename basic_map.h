@@ -32,17 +32,17 @@ typedef struct
 {
   Point topLeft;
   point botRight;
-}Rectangle;
+}Room;
 
 
-#define rectang(a,b,c,d) {{(a),(b)},{(c),(d)}}
+#define MAKE_ROOM(a,b,c,d) {{(a),(b)},{(c),(d)}}
 
 
 typedef struct
 {
-  Rectangle rect;
-  Rectangle *left,*right;
-}RectangleTree;
+  Room rect;
+  Room *left,*right;
+}RoomTree;
 
 
 class Map
@@ -51,7 +51,7 @@ class Map
 
     int **terrian,height,width,deep;//the deeper you go, the more dangerous
                                       //shall apear
-    RectanlgeTree *rectT;
+    RoomTree *rectT;
     //objects,beings,items list not yet implemented
 
   public:
@@ -61,8 +61,8 @@ class Map
     {
       self.height = height;
       self.width = width;
-      rectT = new RectangleTree;
-      self.rectT->rect = rectang(0,0,height,width);
+      rectT = new RoomTree;
+      self.rectT->rect = MAKE_ROOM(0,0,height,width);
 
       self.terrian = new int*[height];
       for(int i=0;i<height;i++) 
@@ -84,24 +84,54 @@ class Map
        BSsplit builds the binary tree, BSPGen creates rooms and
        connection between them.
     */
-    void BSsplit(int min_room_sizem,RectangleTree *tree = self->rectT)
+    void BSsplit(int min_room_size,RoomTree *tree = self->rectT)
     {
       int xDiff = tree->rect.botRight.x - tree->rect.topLeft.x,
           yDiff = tree->rect.botRight.y - tree->rect.topLeft.y;
-      /* if current room too small to split, stop*/
-      if(xDiff < min_room_size*2 or yDiff < min_room_size*2)
-        return;
-      /* otherwise choose split type and  random point in suitable range */
-      if(rand() % 2)
+      int tL_x = tree->rect.topLeft.x,
+          tL_y = tree->rect.topLeft.y,
+          bR_x = tree->rect.botRight.x,
+          bR_y = tree->rect.botRight.y;
+      bool v_split_OK = xDiff > min_room_size*2,
+           h_split_OK = yDiff > min_room_size*2,
+           any_split_OK = xDiff and yDiff;
+      /* if both splits if OK, choose one randomly */
+      if (any_split_OK and rand() % 2)
       {
-        /* horizontal split */
-        int h_split = min_room_size*2 + (rand() % (yDiff - min_room_size*2));
-        //not yet implemented
+        //maybe wrong \(o_o)/ , not yet tested
+        int h_split_dot = min_room_size + (rand() % (yDiff - min_room_size*2));
+        tree->left = new RoomTree;
+        tree->right = new RoomTree;
+        tree->left->rect = MAKE_ROOM(tL_x, tL_y, bR_x, h_splt_dot-1);
+        tree->right->rect = MAKE_ROOM(tL_x, h_split_dot+1 ,bR_x, bRy);
+        self.BSsplit(min_room_size,tree->left);
+        self.BSsplit(min_room_size,tree->right);
       }
+      /* if only one is ok, use it */
+      else if (v_split_OK)
+      {
+        int v_split_dot = min_room_size + (rand() % (yDiff - min_room_size*2));
+        tree->left = new RoomTree;
+        tree->right = new RoomTree;
+        tree->left->rect = MAKE_ROOM(tL_x, tL_y, v_split_dot-1, bRy);
+        tree->right->rect = MAKE_ROOM(v_split_dot+1, tLy ,bR_x, bRy);
+        self.BSsplit(min_room_size,tree->left);
+        self.BSsplit(min_room_size,tree->right);
+      }
+      else if (h_split_OK)
+      {
+        int h_split_dot = min_room_size + (rand() % (yDiff - min_room_size*2));
+        tree->left = new RoomTree;
+        tree->right = new RoomTree;
+        tree->left->rect = MAKE_ROOM(tL_x, tL_y, bR_x, h_splt_dot-1);
+        tree->right->rect = MAKE_ROOM(tL_x, h_split_dot+1 ,bR_x, bRy);
+        self.BSsplit(min_room_size,tree->left);
+        self.BSsplit(min_room_size,tree->right);
+      }
+      /* othewise stop */
       else
       {
-        /* vertical split*/
-        int v_split = min_room_size*2 + (rand() % (xDiff - min_room_size*2));
+        return;
       }
     }
     void BSPGen(int min_room_size)
@@ -111,6 +141,7 @@ class Map
     }
 
 
+    /* ObjectsGen spawns objects in dungeon (enemies/items/door/etc) */
     void ObjectsGen()
     {
       //not yet implemented
