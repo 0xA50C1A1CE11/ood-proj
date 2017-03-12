@@ -5,7 +5,7 @@
 */
 
 
-//includes and defines goes here
+#include <stdlib.h>
 
 
 /* 
@@ -21,28 +21,52 @@
 #define Wall 1
 
 
-typedef struct 
+struct Point
 {
   int x;
   int y;
-} Point;
+
+  Point()
+  {
+    this->x = (this->x =0);
+  }
+
+  Point(int x,int y)
+  {
+    this->x = x; 
+    this->y = y;
+  }
+};
 
 
-typedef struct
+struct Room
 {
   Point topLeft;
-  point botRight;
-}Room;
+  Point botRight;
+ 
+  Room()
+  {
+    this->topLeft = (this->botRight = Point(0,0));
+  } 
+
+  Room(int tLx,int tLy,int bRx, int bRy)
+  {
+    this->topLeft = Point(tLx,tLy);
+    this->botRight = Point(bRx,bRy);
+  }
+};
 
 
-#define MAKE_ROOM(a,b,c,d) {{(a),(b)},{(c),(d)}}
-
-
-typedef struct
+struct RoomTree
 {
-  Room rect;
-  Room *left,*right;
-}RoomTree;
+  Room room;
+  RoomTree *left,*right;
+  RoomTree(int tLx,int tLy,int bRx, int bRy)
+  {
+    this->room = Room(tLx,tLy,bRx,bRy);
+    this->left = (this->right = nullptr);
+  }
+};
 
 
 class Map
@@ -50,32 +74,9 @@ class Map
   private:
 
     int **terrian,height,width,deep;//the deeper you go, the more dangerous
-                                      //shall apear
-    RoomTree *rectT;
+                                    //enemies shall apear
+    RoomTree *roomT;
     //objects,beings,items list not yet implemented
-
-  public:
-
-
-    Map(int height,int width)
-    {
-      self.height = height;
-      self.width = width;
-      rectT = new RoomTree;
-      self.rectT->rect = MAKE_ROOM(0,0,height,width);
-
-      self.terrian = new int*[height];
-      for(int i=0;i<height;i++) 
-        self.terrian[i] = new int[width];
-    }
-
-
-    void Clear()
-    {
-      for(int i=0;i<self.height;i++)
-        for(int j=0;j<self.width;j++)
-          self.terrian[i][j] = Floor;
-    }
 
 
     /*
@@ -84,49 +85,59 @@ class Map
        BSsplit builds the binary tree, BSPGen creates rooms and
        connection between them.
     */
-    void BSsplit(int min_room_size,RoomTree *tree = self->rectT)
+    void BSsplit(int min_room_size,struct RoomTree *tree)
     {
-      int xDiff = tree->rect.botRight.x - tree->rect.topLeft.x,
-          yDiff = tree->rect.botRight.y - tree->rect.topLeft.y;
-      int tL_x = tree->rect.topLeft.x,
-          tL_y = tree->rect.topLeft.y,
-          bR_x = tree->rect.botRight.x,
-          bR_y = tree->rect.botRight.y;
+
+      int xDiff = tree->room.botRight.x - tree->room.topLeft.x,
+          yDiff = tree->room.botRight.y - tree->room.topLeft.y;
+
+      int tL_x = tree->room.topLeft.x,
+          tL_y = tree->room.topLeft.y,
+          bR_x = tree->room.botRight.x,
+          bR_y = tree->room.botRight.y;
+
       bool v_split_OK = xDiff > min_room_size*2,
            h_split_OK = yDiff > min_room_size*2,
            any_split_OK = xDiff and yDiff;
+
       /* if both splits if OK, choose one randomly */
       if (any_split_OK and rand() % 2)
       {
         //maybe wrong \(o_o)/ , not yet tested
         int h_split_dot = min_room_size + (rand() % (yDiff - min_room_size*2));
-        tree->left = new RoomTree;
-        tree->right = new RoomTree;
-        tree->left->rect = MAKE_ROOM(tL_x, tL_y, bR_x, h_splt_dot-1);
-        tree->right->rect = MAKE_ROOM(tL_x, h_split_dot+1 ,bR_x, bRy);
-        self.BSsplit(min_room_size,tree->left);
-        self.BSsplit(min_room_size,tree->right);
+        this->BSsplit(min_room_size,tree->left = new RoomTree(tL_x,
+                                                             tL_y,
+                                                             bR_x,
+                                                             h_split_dot-1));
+        this->BSsplit(min_room_size,tree->right = new RoomTree(tL_x,
+                                                              h_split_dot+1,
+                                                              bR_x,
+                                                              bR_y));
       }
       /* if only one is ok, use it */
       else if (v_split_OK)
       {
         int v_split_dot = min_room_size + (rand() % (yDiff - min_room_size*2));
-        tree->left = new RoomTree;
-        tree->right = new RoomTree;
-        tree->left->rect = MAKE_ROOM(tL_x, tL_y, v_split_dot-1, bRy);
-        tree->right->rect = MAKE_ROOM(v_split_dot+1, tLy ,bR_x, bRy);
-        self.BSsplit(min_room_size,tree->left);
-        self.BSsplit(min_room_size,tree->right);
+        this->BSsplit(min_room_size,tree->left = new RoomTree(tL_x,
+                                                             tL_y,
+                                                             v_split_dot-1,
+                                                             bR_y));
+        this->BSsplit(min_room_size,tree->right = new RoomTree(v_split_dot+1,
+                                                              tL_y,
+                                                              bR_x,
+                                                              bR_y));
       }
       else if (h_split_OK)
       {
         int h_split_dot = min_room_size + (rand() % (yDiff - min_room_size*2));
-        tree->left = new RoomTree;
-        tree->right = new RoomTree;
-        tree->left->rect = MAKE_ROOM(tL_x, tL_y, bR_x, h_splt_dot-1);
-        tree->right->rect = MAKE_ROOM(tL_x, h_split_dot+1 ,bR_x, bRy);
-        self.BSsplit(min_room_size,tree->left);
-        self.BSsplit(min_room_size,tree->right);
+        this->BSsplit(min_room_size,tree->left = new RoomTree(tL_x,
+                                                             tL_y,
+                                                             bR_x,
+                                                             h_split_dot-1));
+        this->BSsplit(min_room_size,tree->right = new RoomTree(tL_x,
+                                                              h_split_dot+1,
+                                                              bR_x,
+                                                              bR_y));
       }
       /* othewise stop */
       else
@@ -137,7 +148,29 @@ class Map
     void BSPGen(int min_room_size)
     {
       //not yet implemented
-      
+    }
+
+
+  public:
+
+
+    Map(int height,int width)
+    {
+      this->height = height;
+      this->width = width;
+      this->roomT = new RoomTree(0,0,height,width);
+
+      this->terrian = new int*[height];
+      for(int i=0;i<height;i++) 
+        this->terrian[i] = new int[width];
+    }
+
+
+    void Clear()
+    {
+      for(int i=0;i<this->height;i++)
+        for(int j=0;j<this->width;j++)
+          this->terrian[i][j] = Floor;
     }
 
 
@@ -150,8 +183,8 @@ class Map
 
     ~Map()
     {
-      for(int i=0;i<height;i++) 
-        delete self.terrian[i];
-      delete self.terrian;
+      for(int i=0;i<height;i++)
+        delete this->terrian[i];
+      delete this->terrian;
     }
-}
+};
