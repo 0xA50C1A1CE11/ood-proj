@@ -139,10 +139,21 @@ class Map
                                                               bR_x,
                                                               bR_y));
       }
-      /* othewise stop */
+      /* othewise make a room and stop */
       else
       {
-        return;
+        double room_scale = (6 + rand() % 4)*0.1;
+
+        int room_width = room_scale * (bR_x - tL_x),
+            room_height = room_scale * (bR_y - tL_y),
+            begin_y_range = (bR_x - tL_x) - room_height,
+            begin_x_range = (bR_y - tL_y) - room_width,
+            room_start_y = tL_y + rand() % begin_y_range,
+            room_start_x = tL_x + rand() % begin_x_range;
+        tree->room = Room(room_start_x,
+                          room_start_y,
+                          room_start_x + room_width,
+                          room_start_y + room_height);
       }
     }
     void BSPGen(int min_room_size)
