@@ -156,9 +156,18 @@ class Map
                           room_start_y + room_height);
       }
     }
+
+
+    /*
+       The alghorithm of building room connection searchs for neighboring
+       rooms, makes connection between them, and then removes them from a tree.
+       Connected room is assigned to their lua. Proceeds until only one
+       node left.
+    */
+    #define isLeaf(node) ((node)->right == nullptr and (node)->left == nullptr)
     void BSPGen(int min_room_size)
     {
-      //not yet implemented
+      
     }
 
 
