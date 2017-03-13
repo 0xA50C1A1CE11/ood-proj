@@ -117,7 +117,7 @@ class Map
       /* if only one is ok, use it */
       else if (v_split_OK)
       {
-        int v_split_dot = min_room_size + (rand() % (yDiff - min_room_size*2));
+        int v_split_dot = min_room_size + (rand() % (xDiff - min_room_size*2));
         this->BSsplit(min_room_size,tree->left = new RoomTree(tL_x,
                                                              tL_y,
                                                              v_split_dot-1,
@@ -129,7 +129,7 @@ class Map
       }
       else if (h_split_OK)
       {
-        int h_split_dot = min_room_size + (rand() % (xDiff - min_room_size*2));
+        int h_split_dot = min_room_size + (rand() % (yDiff - min_room_size*2));
         this->BSsplit(min_room_size,tree->left = new RoomTree(tL_x,
                                                              tL_y,
                                                              bR_x,
