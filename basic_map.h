@@ -64,7 +64,7 @@ struct RoomTree
   RoomTree(int tLx,int tLy,int bRx, int bRy)
   {
     this->room = Room(tLx,tLy,bRx,bRy);
-    this->left = (this->right = nullptr);
+    this->left = (this->right = NULL);
   }
 };
 
@@ -117,7 +117,7 @@ class Map
       /* if only one is ok, use it */
       else if (v_split_OK)
       {
-        int v_split_dot = min_room_size + (rand() % (yDiff - min_room_size*2));
+        int v_split_dot = min_room_size + (rand() % (xDiff - min_room_size*2));
         this->BSsplit(min_room_size,tree->left = new RoomTree(tL_x,
                                                              tL_y,
                                                              v_split_dot-1,
@@ -164,7 +164,14 @@ class Map
        Connected room is assigned to their lua. Proceeds until only one
        node left.
     */
-    #define isLeaf(node) ((node)->right == nullptr and (node)->left == nullptr)
+    ///#define isLeaf(node) ((node)->right == NULL and (node)->left == NULL)
+    inline bool isLeaf(node){
+    	if ((node)->right == NULL and (node)->left == NULL){
+    		return false;
+    	}
+    	else{ return true;}
+
+    }
     void BSPGen(int min_room_size)
     {
       
