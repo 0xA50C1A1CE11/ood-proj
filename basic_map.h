@@ -164,7 +164,6 @@ class Map
        Connected room is assigned to their lua. Proceeds until only one
        node left.
     */
-    ///#define isLeaf(node) ((node)->right == NULL and (node)->left == NULL)
     inline bool isLeaf(node){
     	if ((node)->right == NULL and (node)->left == NULL){
     		return false;
@@ -172,9 +171,15 @@ class Map
     	else{ return true;}
 
     }
+
+
+    void ConnectNieghbors(RoomTree *tree)
+    {
+      /* At first we need to define eather corridor will be horizontal or not */
+    }
     void BSPGen(int min_room_size)
     {
-      
+      //DFS algh required
     }
 
 
