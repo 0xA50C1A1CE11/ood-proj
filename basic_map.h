@@ -6,6 +6,7 @@
 
 
 #include <stdlib.h>
+#include <iostream>
 
 
 /* 
@@ -16,7 +17,7 @@
   Objects,items,and beings must have more complicated representation.
 */
 
-
+#define DBG_VAR(var) std::cout<<(#var)<<" is "<< (var)<<std::endl;
 #define Floor 0
 #define Wall 1
 
@@ -61,6 +62,11 @@ struct RoomTree
 {
   Room room;
   RoomTree *left,*right;
+  RoomTree()
+  {
+    this->room = Room();
+    this->left=(this->right=nullptr);
+  }
   RoomTree(int tLx,int tLy,int bRx, int bRy)
   {
     this->room = Room(tLx,tLy,bRx,bRy);
@@ -76,7 +82,7 @@ class Map
     int **terrian,height,width,deep;//the deeper you go, the more dangerous
                                     //enemies shall apear
     RoomTree *roomT;
-    int rooms_count;
+    
     //objects,beings,items list not yet implemented
 
 
@@ -86,78 +92,46 @@ class Map
        BSsplit builds the binary tree, BSPGen creates rooms and
        connection between them.
     */
-    void BSsplit(int min_room_size,struct RoomTree *tree)
+    void BSsplit(int min_room_size,struct RoomTree* tree)
     {
-      
-      this->rooms_count++;
-      
-      int xDiff = tree->room.botRight.x - tree->room.topLeft.x,
-          yDiff = tree->room.botRight.y - tree->room.topLeft.y;
-
       int tL_x = tree->room.topLeft.x,
           tL_y = tree->room.topLeft.y,
           bR_x = tree->room.botRight.x,
           bR_y = tree->room.botRight.y;
-
-      bool v_split_OK = xDiff > min_room_size*2,
-           h_split_OK = yDiff > min_room_size*2,
-           any_split_OK = xDiff and yDiff;
-
-      /* if both splits if OK, choose one randomly */
-      if (any_split_OK and rand() % 2)
+      bool h_split_ok = (bR_y - tL_y) > min_room_size*2,
+           v_split_ok = (bR_x - tL_x) > min_room_size*2,
+           both_splits_ok = h_split_ok and v_split_ok;
+      /* if both splits is ok, choose one randomly */
+      if(both_splits_ok and rand() % 2)
       {
-        //maybe wrong \(o_o)/ , not yet tested
-        int h_split_dot = min_room_size + (rand() % (yDiff - min_room_size*2));
-        this->BSsplit(min_room_size,tree->left = new RoomTree(tL_x,
-                                                             tL_y,
-                                                             bR_x,
-                                                             h_split_dot-1));
-        this->BSsplit(min_room_size,tree->right = new RoomTree(tL_x,
-                                                              h_split_dot+1,
-                                                              bR_x,
-                                                              bR_y));
+        int h_split_dot = tL_y + min_room_size +
+                          (rand() % (bR_y - tL_y - min_room_size*2));
+        tree->left = new RoomTree(tL_x,tL_y,bR_x,h_split_dot-1);
+        tree->right = new RoomTree(tL_x,h_split_dot+1,bR_x,bR_y);
+        BSsplit(min_room_size,tree->left);
+        BSsplit(min_room_size,tree->right);
       }
-      /* if only one is ok, use it */
-      else if (v_split_OK)
+      else if(v_split_ok)
       {
-        int v_split_dot = min_room_size + (rand() % (xDiff - min_room_size*2));
-        this->BSsplit(min_room_size,tree->left = new RoomTree(tL_x,
-                                                             tL_y,
-                                                             v_split_dot-1,
-                                                             bR_y));
-        this->BSsplit(min_room_size,tree->right = new RoomTree(v_split_dot+1,
-                                                              tL_y,
-                                                              bR_x,
-                                                              bR_y));
+        int h_split_dot = tL_x + min_room_size +
+                          (rand() % (bR_x - tL_x - min_room_size*2));
+        tree->left = new RoomTree(tL_x,tL_y,h_split_dot-1,bR_y);
+        tree->right = new RoomTree(h_split_dot+1,tL_y,bR_x,bR_y);
+        BSsplit(min_room_size,tree->left);
+        BSsplit(min_room_size,tree->right);
       }
-      else if (h_split_OK)
+      else if(h_split_ok)
       {
-        int h_split_dot = min_room_size + (rand() % (yDiff - min_room_size*2));
-        this->BSsplit(min_room_size,tree->left = new RoomTree(tL_x,
-                                                             tL_y,
-                                                             bR_x,
-                                                             h_split_dot-1));
-        this->BSsplit(min_room_size,tree->right = new RoomTree(tL_x,
-                                                              h_split_dot+1,
-                                                              bR_x,
-                                                              bR_y));
+        int h_split_dot = tL_y + min_room_size +
+                          (rand() % (bR_y - tL_y - min_room_size*2));
+        tree->left = new RoomTree(tL_x,tL_y,bR_x,h_split_dot-1);
+        tree->right = new RoomTree(tL_x,h_split_dot+1,bR_x,bR_y);
+        BSsplit(min_room_size,tree->left);
+        BSsplit(min_room_size,tree->right);
       }
-      /* othewise make a room and stop */
       else
       {
-        double room_scale = (6 + rand() % 4)*0.1;
-
-        int room_width = room_scale * (bR_x - tL_x),
-            room_height = room_scale * (bR_y - tL_y),
-            begin_y_range = (bR_x - tL_x) - room_height,
-            begin_x_range = (bR_y - tL_y) - room_width,
-            room_start_y = tL_y + rand() % begin_y_range,
-            room_start_x = tL_x + rand() % begin_x_range;
-        tree->room = Room(room_start_x,
-                          room_start_y,
-                          room_start_x + room_width,
-                          room_start_y + room_height);
-        this->rooms_count--;
+        this->DrawRoom(tree);
       }
     }
 
@@ -216,11 +190,18 @@ class Map
           this->terrian[i][b.y] = Floor;
       }
     }
-    void DrawRoom(RoomTree *tree)
-    {
-      for(int i = tree->room.botRight.x; i <= tree->room.topLeft.x; i++)
-        for(int j = tree->room.botRight.y; i <= tree->room.topLeft.y; j++)
+    void DrawRoom(RoomTree* &tree)
+    { 
+      for(int i = tree->room.topLeft.x; i < tree->room.botRight.x; i++)
+        for(int j = tree->room.topLeft.y; j < tree->room.botRight.y; j++)
           this->terrian[i][j] = Floor;
+    }
+    void TESTDRAW(RoomTree *tree)
+    {
+      if(tree == NULL) return;
+      DrawRoom(tree);
+      TESTDRAW(tree->left);
+      TESTDRAW(tree->right);
     }
     void BSPGen(int min_room_size)
     {
@@ -233,7 +214,6 @@ class Map
 
     Map(int height,int width)
     {
-      this->rooms_count = 1;
       this->height = height;
       this->width = width;
       this->roomT = new RoomTree(0,0,height,width);
@@ -251,7 +231,21 @@ class Map
           this->terrian[i][j] = Wall;
     }
 
-
+    
+    /* for testing */
+    void TEST(int max_rm_sz)
+    {
+      this->Clear();
+      this->BSsplit(max_rm_sz,this->roomT);
+      for(int i=0;i < this->height; i++)
+      {
+        for(int j=0;j < this->width; j++)
+        {
+          std::cout << ((this->terrian[i][j]==Floor)? ".": "#");
+        }
+        std::cout<<std::endl;
+      }
+    }
     /* ObjectsGen spawns objects in dungeon (enemies/items/door/etc) */
     void ObjectsGen()
     {
