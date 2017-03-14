@@ -76,6 +76,7 @@ class Map
     int **terrian,height,width,deep;//the deeper you go, the more dangerous
                                     //enemies shall apear
     RoomTree *roomT;
+    int rooms_count;
     //objects,beings,items list not yet implemented
 
 
@@ -87,7 +88,9 @@ class Map
     */
     void BSsplit(int min_room_size,struct RoomTree *tree)
     {
-
+      
+      this->rooms_count++;
+      
       int xDiff = tree->room.botRight.x - tree->room.topLeft.x,
           yDiff = tree->room.botRight.y - tree->room.topLeft.y;
 
@@ -154,6 +157,7 @@ class Map
                           room_start_y,
                           room_start_x + room_width,
                           room_start_y + room_height);
+        this->rooms_count--;
       }
     }
 
@@ -164,33 +168,63 @@ class Map
        Connected room is assigned to their lua. Proceeds until only one
        node left.
     */
-    inline bool isLeaf(node){
-    	if ((node)->right == NULL and (node)->left == NULL){
-    		return false;
-    	}
-    	else{ return true;}
-
+    inline bool isLeaf(RoomTree *node)
+    {
+        return node->right == NULL and node->left == NULL;
     }
+   
 
-    #define MIN(a,b) ((a)<(b))? (a) : (b)
-    #define MAX(a,b) ((a)>(b))? (a) : (b)
-    #define LEFT(tree) (tree)->left->room
-    #define RIGHT(tree) (tree)->right->room
+    #define RANDOM_POINT_IN(room)\
+      Point((room.topLeft.x + rand() % (room.botRight.x - room.topLeft.x)),\
+            (room.topLeft.y + rand() % (room.botRight.y - room.topLeft.y)))
+    #define MIN(a,b) ((a)<(b)) ? (a) : (b)
+    #define MAX(a,b) ((a)>(b)) ? (a) : (b)
+    /* code here might look a bit creepe at first glance */
     void ConnectNieghbors(RoomTree *tree)
     {
-      /* defining size of a box, where corridor may be spawned */
-      int TLX = MIN(LEFT(tree).topLeft.x,RIGHT(tree).topLeft.x),
-          TLY = MIN(LEFT(tree).topLeft.y,RIGHT(tree).topLeft.y),
-          BRX = MAX(LEFT(tree).botRight.x,RIGHT(tree).botRight.x),
-          BRY = MAX(LEFT(tree).botRight.y,RIGHT(tree).botRight.y);
-      /* now define relative rooms positioning */
-      /* define either corridor will be horizontal or not */
-      /* define corridor spawn range */
-      /* spawn corridor and exit */
+      
+      /* select two random points, each resides inside certain room */
+      Point a = RANDOM_POINT_IN(tree->left->room),
+            b = RANDOM_POINT_IN(tree->right->room);
+      /* make a range between them */
+      int min_x = MIN(a.x,b.x),
+          min_y = MIN(a.y,b.y),
+          max_x = MAX(a.x,b.x),
+          max_y = MAX(a.y,a.y);
+      /* horizontal fracture  */
+      if(rand() % 2)
+      {
+        int fracture_dot = min_y + rand() % (max_y - min_y),
+            direction = (a.y < fracture_dot) ? 1 : -1;
+        for(int i=min_x;i<=max_x;i++)
+          this->terrian[i][fracture_dot] = Floor;
+        for(int i=a.y;i!=fracture_dot;i+direction)
+          this->terrian[a.x][i] = Floor;
+        for(int i=b.y;i!=fracture_dot;i-direction)
+          this->terrian[b.x][i] = Floor;
+      }
+      /* vertiacal fracture */
+      else
+      {
+        int fracture_dot = min_x + rand() % (max_x - min_x),
+            direction = (a.x < fracture_dot) ? 1 : -1;
+        for(int i=min_y;i<=max_y;i++)
+          this->terrian[fracture_dot][i] = Floor;
+        for(int i=a.x;i!=fracture_dot;i+direction)
+          this->terrian[i][a.y] = Floor;
+        for(int i=b.x;i!=fracture_dot;i-direction)
+          this->terrian[i][b.y] = Floor;
+      }
+    }
+    void DrawRoom(RoomTree *tree)
+    {
+      for(int i = tree->room.botRight.x; i <= tree->room.topLeft.x; i++)
+        for(int j = tree->room.botRight.y; i <= tree->room.topLeft.y; j++)
+          this->terrian[i][j] = Floor;
     }
     void BSPGen(int min_room_size)
     {
-      //DFS algh required
+      
     }
 
 
@@ -199,6 +233,7 @@ class Map
 
     Map(int height,int width)
     {
+      this->rooms_count = 1;
       this->height = height;
       this->width = width;
       this->roomT = new RoomTree(0,0,height,width);
@@ -213,7 +248,7 @@ class Map
     {
       for(int i=0;i<this->height;i++)
         for(int j=0;j<this->width;j++)
-          this->terrian[i][j] = Floor;
+          this->terrian[i][j] = Wall;
     }
 
 
