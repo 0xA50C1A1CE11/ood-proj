@@ -172,10 +172,21 @@ class Map
 
     }
 
-
+    #define MIN(a,b) ((a)<(b))? (a) : (b)
+    #define MAX(a,b) ((a)>(b))? (a) : (b)
+    #define LEFT(tree) (tree)->left->room
+    #define RIGHT(tree) (tree)->right->room
     void ConnectNieghbors(RoomTree *tree)
     {
-      /* At first we need to define eather corridor will be horizontal or not */
+      /* defining size of a box, where corridor may be spawned */
+      int TLX = MIN(LEFT(tree).topLeft.x,RIGHT(tree).topLeft.x),
+          TLY = MIN(LEFT(tree).topLeft.y,RIGHT(tree).topLeft.y),
+          BRX = MAX(LEFT(tree).botRight.x,RIGHT(tree).botRight.x),
+          BRY = MAX(LEFT(tree).botRight.y,RIGHT(tree).botRight.y);
+      /* now define relative rooms positioning */
+      /* define either corridor will be horizontal or not */
+      /* define corridor spawn range */
+      /* spawn corridor and exit */
     }
     void BSPGen(int min_room_size)
     {
