@@ -2,7 +2,7 @@
 int
 main()
 {
-  Map *m = new Map(44,116);
-  m->TEST(14);
+  Map *m = new Map(40,80);
+  m->TEST(5,3);
   return 0;
 }
