@@ -140,10 +140,10 @@ class Map
       }
       else
       {
-        this->leafs_c++;
+        this->leafs_c++;return;
         if((bR_y - tL_y - min_room_sz) == 0 or (bR_x - tL_x - min_room_sz)==0)
           return;
-        /* choose room size and location randomly*/
+        /* choose room size and location in box randomly*/
         int room_height = range_val(min_room_sz,tL_y+min_room_sz,bR_y),
             room_width = range_val(min_room_sz,tL_x+min_room_sz,bR_x),
             start_y = range_val(tL_y,tL_y+room_height,bR_y),
@@ -195,18 +195,18 @@ class Map
       this->height = height;
       this->width = width;
       this->leafs_c = 0;
-      this->roomT = new RoomTree(1,1,width-1,height-1);
+      this->roomT = new RoomTree(1,1,width,height);
 
       this->terrian = new int*[height+1];
-      for(int i=0;i<height+1;i++) 
+      for(int i=0;i<=height+1;i++) 
         this->terrian[i] = new int[width+1];
     }
 
 
     void Clear()
     {
-      for(int i=0;i<=this->height;i++)
-        for(int j=0;j<=this->width;j++)
+      for(int i=0;i<=this->height+1;i++)
+        for(int j=0;j<=this->width+1;j++)
           this->terrian[i][j] = Wall;
     }
 
@@ -215,9 +215,9 @@ class Map
     void TEST(int min_box_sz,int min_rm_sz)
     {
       BSPGen(min_box_sz,min_rm_sz);
-      for(int i=0;i <= this->height; i++)
+      for(int i=0;i <= this->height+1; i++)
       {
-        for(int j=0;j <= this->width; j++)
+        for(int j=0;j <= this->width+1; j++)
         {
           std::cout << ((this->terrian[i][j]==Floor)? ".": "#");
         }
