@@ -19,6 +19,8 @@
 */
 
 #define DBG_VAR(var) std::cout<<(#var)<<" is "<< (var)<<std::endl;
+#define MIN(a,b) ((a)<(b))? (a) : (b)
+#define MAX(a,b) ((a)>(b))? (a) : (b)
 inline int range_val(int initial,int min,int max)
 {
   if((max-min) == 0) return initial;
@@ -140,7 +142,7 @@ class Map
       }
       else
       {
-        this->leafs_c++;return;
+        this->leafs_c++;
         if((bR_y - tL_y - min_room_sz) == 0 or (bR_x - tL_x - min_room_sz)==0)
           return;
         /* choose room size and location in box randomly*/
@@ -150,6 +152,64 @@ class Map
             start_x = range_val(tL_x,tL_x+room_width,bR_x);
         tree->room = Room(start_x,start_y,
                           start_x+room_width,start_y+room_height);
+      }
+    }
+
+    /* build connection between rooms */
+    void ConnectRooms(RoomTree *a,RoomTree * b)
+    {
+      int a_rand_y = range_val(a->room.topLeft.y,a->room.topLeft.y,a->room.botRight.y),
+          a_rand_x = range_val(a->room.topLeft.x,a->room.topLeft.x,a->room.botRight.x),
+          b_rand_y = range_val(b->room.topLeft.y,b->room.topLeft.y,b->room.botRight.y),
+          b_rand_x = range_val(b->room.topLeft.x,b->room.topLeft.x,b->room.botRight.x);
+      /* 50% horizontal angle */
+      if(rand() % 2)
+      {
+        int lower = MIN(a_rand_y,b_rand_y),
+            upper = MAX(a_rand_y,b_rand_y),
+            h_break_dot = range_val(lower,lower,upper);
+
+        int low = MIN(a_rand_x,b_rand_x),
+            up  = MAX(a_rand_x,b_rand_x);
+
+        for(int i=low;i<=up;i++)
+          this->terrian[h_break_dot][i] = Floor;
+
+            low = MIN(a_rand_y,h_break_dot),
+            up  = MAX(a_rand_y,h_break_dot);
+
+        for(int i=low;i<=up;i++)
+          this->terrian[i][a_rand_x] = Floor;
+
+            low = MIN(b_rand_y,h_break_dot),
+            up  = MAX(b_rand_y,h_break_dot);
+
+        for(int i=low;i<=up;i++)
+          this->terrian[i][b_rand_x] = Floor;
+      }
+      else
+      {
+        int lower = MIN(a_rand_x,b_rand_x),
+            upper = MAX(a_rand_x,b_rand_x),
+            v_break_dot = range_val(lower,lower,upper);
+
+        int low = MIN(a_rand_y,b_rand_y),
+            up  = MAX(a_rand_y,b_rand_y);
+
+        for(int i=low;i<=up;i++)
+          this->terrian[i][v_break_dot] = Floor;
+
+            low = MIN(a_rand_x,v_break_dot),
+            up  = MAX(a_rand_x,v_break_dot);
+
+        for(int i=low;i<=up;i++)
+          this->terrian[a_rand_y][i] = Floor;
+
+            low = MIN(b_rand_x,v_break_dot),
+            up  = MAX(b_rand_x,v_break_dot);
+
+        for(int i=low;i<=up;i++)
+          this->terrian[b_rand_y][i] = Floor;
       }
     }
 
@@ -184,6 +244,12 @@ class Map
       this->Clear();
       for(int i=0;i<leafs.size();i++)
         DrawRoom(leafs[i]);
+      int sz = 0;
+      while((sz = leafs.size())-1)
+      {
+        ConnectRooms(leafs[sz-1],leafs[sz-2]);
+        leafs.pop_back();
+      }
     }
 
 
