@@ -83,8 +83,13 @@ struct RoomTree
   }
   ~RoomTree()
   {
+<<<<<<< HEAD
     if(this->left != NULL) delete this->left;
     if(this->right != NULL) delete this->right;
+=======
+    if (this->left != NULL) delete this->left;
+    if (this->right != NULL) delete this->right;
+>>>>>>> ilya
   }
 };
 
@@ -92,8 +97,15 @@ struct RoomTree
 class Map
 {
 
+<<<<<<< HEAD
   public:
 
+=======
+
+  public:
+
+
+>>>>>>> ilya
     Map(int height,int width)
     {
       this->height = height;
@@ -140,6 +152,10 @@ class Map
 
   private:
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> ilya
     int **terrian,height,width;
     RoomTree *roomT;
 
@@ -191,7 +207,11 @@ class Map
       }
       else
       {
+<<<<<<< HEAD
         if((bR_y-tL_y-min_room_sz) == 0 or (bR_x-tL_x-min_room_sz)==0)
+=======
+        if((bR_y - tL_y - min_room_sz) == 0 or (bR_x - tL_x - min_room_sz)==0)
+>>>>>>> ilya
           return;
         /* choose room size and location in box randomly*/
         int room_height = from_range(min_room_sz,tL_y+min_room_sz,bR_y),
@@ -207,6 +227,7 @@ class Map
     void ConnectRooms(RoomTree *a,RoomTree * b)
     {
       int a_rand_y = from_range(a->room.topLeft.y,
+<<<<<<< HEAD
                                 a->room.topLeft.y,
                                 a->room.botRight.y),
 
@@ -221,6 +242,22 @@ class Map
           b_rand_x = from_range(b->room.topLeft.x,
                                 b->room.topLeft.x,
                                 b->room.botRight.x);
+=======
+                               a->room.topLeft.y,
+                               a->room.botRight.y),
+
+          a_rand_x = from_range(a->room.topLeft.x,
+                               a->room.topLeft.x, 
+                               a->room.botRight.x),
+
+          b_rand_y = from_range(b->room.topLeft.y,
+                               b->room.topLeft.y,
+                               b->room.botRight.y),
+
+          b_rand_x = from_range(b->room.topLeft.x,
+                               b->room.topLeft.x,
+                               b->room.botRight.x);
+>>>>>>> ilya
 
       /* 50% horizontal angle */
       if(rand() % 2)
@@ -294,15 +331,29 @@ class Map
     }
     void BSPGen(int min_box_sz,int min_room_sz)
     {
+      /* expand room tree */
       this->BSsplit(min_box_sz,min_room_sz,this->roomT);
+
+      /* collect leafs aka single rooms */
       std::vector <RoomTree*> leafs;
       LeafsCollect(this->roomT,leafs);
 
+<<<<<<< HEAD
       this->Clear();
 
       for(int i=0;i<leafs.size();i++)
         DrawRoom(leafs[i]);
 
+=======
+      /* clear treeian */
+      this->Clear();
+
+      /* draw rooms... */
+      for(int i=0;i<leafs.size();i++)
+        DrawRoom(leafs[i]);
+
+      /* ... and connection between them*/
+>>>>>>> ilya
       int sz = 0;
 
       while((sz = leafs.size())-1)
