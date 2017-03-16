@@ -1,8 +1,9 @@
-#include "basic_map.h"
+#include "map.h"
+#include <stdio.h>
 int
-main()
+main(int argc, char *argv[])
 {
   Map *m = new Map(40,80);
-  m->TEST(14,7);
+  m->TEST(atoi(argv[1]),atoi(argv[2]));
   return 0;
 }
