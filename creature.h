@@ -1,9 +1,3 @@
-struct Route
-{
-  Point point;
-  Route *next;
-};
-
 /* states */
 
 #define Normal 0
@@ -13,9 +7,10 @@ struct Route
 
 class Creature
 {
-  Point location;
-  void Move();
-  void Attack();
+  public:
+    Point location;
+    void Move();
+    void Attack();
 };
 class Player: Creature
 {
@@ -23,9 +18,9 @@ class Player: Creature
 };
 class Monster: Creature
 {
-  int state;
-  Route *route;
-  void BuildRoute();
+  public:
+    int state;
+    Route *route;
 };
 /* 
   TODO: 

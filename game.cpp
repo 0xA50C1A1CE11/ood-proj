@@ -1,6 +1,6 @@
 #include "map.h"
 #include "creature.h"
-static class GameMaster {};
+//static class GameMaster {};
 int
 main()
 {
