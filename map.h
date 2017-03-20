@@ -4,7 +4,7 @@
   handling collision, performing character tile movement and so on.
 */
 
-
+#include <ncurses.h>
 #include <stdlib.h>
 #include <iostream>
 #include <vector>
@@ -130,16 +130,24 @@ class Map
 
     
     /* for testing */
-    void TEST(int min_box_sz,int min_rm_sz)
+    void TEST(int min_box_sz,int min_rm_sz,int height1,int width1,int starty,int startx)
     {
+      /*ncurses */
+      WINDOW *win;
+      WINDOW *subwind;
+      win = newwin(height1+1,width1,starty,startx);
+      box(win,'|','-');
+      wrefresh(win);
+      subwind = subwin(win,height1-1,width1-1,1,1);
       BSPGen(min_box_sz,min_rm_sz);
       for(int i=0;i <= this->height+1; i++)
       {
         for(int j=0;j <= this->width+1; j++)
         {
-          std::cout << ((this->terrian[i][j]==Floor)? ".": "#");
+          wprintw(subwind,((this->terrian[i][j]==Floor)? ".": "#"));
+          wrefresh(subwind);
         }
-        std::cout<<std::endl;
+        wprintw(subwind,"\n");
       }
     }
     void ROUTETEST(int ey,int ex,int y,int x)
