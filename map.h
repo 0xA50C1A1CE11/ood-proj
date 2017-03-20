@@ -161,6 +161,7 @@ class Map
 
     int **terrian,height,width;
     RoomTree *roomT;
+    std::vector<RoomTree *> roomV;
     //Creature **monsters;
     //Creature *player;
 
@@ -412,7 +413,7 @@ class Map
         }
         d++;
       }
-      
+
       Route* r = new Route(end_y,end_x);
       this->RouteCollector(matr,end_y,end_x,r);
       for(Route *q = r; q; q=q->next)
