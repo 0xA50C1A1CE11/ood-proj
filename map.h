@@ -130,20 +130,22 @@ class Map
       {
         shot[i] = new char[width+1];
         for(int j=0;j<=this->width+1;j++)
-<<<<<<< HEAD
           shot[i][j] = drawRule(this->terrian[i][j]);
       }
       shot[location.y][location.x] = '@';
       for(int i=0;i<=this->height+1;i++)
-=======
-          this->terrian[i][j] = Wall;
+      {
+        for(int j=0;j<=this->width+1;j++)
+        {
+          std::cout<<shot[i][j];
+        }
+        std::cout<<std::endl;
+      }
     }
 
     
-    /* for testing */
     void TEST(int min_box_sz,int min_rm_sz,int height1,int width1,int starty,int startx)
     {
-      /*ncurses */
       WINDOW *win;
       WINDOW *subwind;
       win = newwin(height1+1,width1,starty,startx);
@@ -152,16 +154,11 @@ class Map
       subwind = subwin(win,height1-1,width1-1,1,1);
       BSPGen(min_box_sz,min_rm_sz);
       for(int i=0;i <= this->height+1; i++)
->>>>>>> 4c2b53fec6ff242700e04d53d6b73716f6333697
       {
         for(int j=0;j<=this->width+1;j++)
         {
-<<<<<<< HEAD
-          std::cout<<shot[i][j];
-=======
           wprintw(subwind,((this->terrian[i][j]==Floor)? ".": "#"));
           wrefresh(subwind);
->>>>>>> 4c2b53fec6ff242700e04d53d6b73716f6333697
         }
         wprintw(subwind,"\n");
       }

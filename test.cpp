@@ -4,11 +4,9 @@
 int
 main(int argc, char *argv[])
 {
-<<<<<<< HEAD
   Map *m = new Map(40,100);
   m->TEST(atoi(argv[1]),atoi(argv[2]));
   return 0;
-=======
 	int startx, starty, width, height;
 	int ch;
 	initscr();			/* Start curses mode 		*/
@@ -31,5 +29,4 @@ main(int argc, char *argv[])
   	std::cin>>a>>b>>c>>d;
   	m->ROUTETEST(a,b,c,d);*/
   	return 0;
->>>>>>> 4c2b53fec6ff242700e04d53d6b73716f6333697
 }
