@@ -9,12 +9,51 @@ class Creature
 {
   public:
     Point location;
-    void Move();
-    void Attack();
+    
 };
 class Player: Creature
 {
-  void Move(); //to mark visited areas
+  public:
+    Point location;
+    Player(int x,int y)
+    {
+      this->location.x=x;
+      this->location.y=y;
+    }
+    Point checkMove(int direction)
+    {
+      switch(direction)
+      {
+        case 'w': return Point(this->location.x,this->location.y-1);
+        case 'a': return Point(this->location.x-1,this->location.y);
+        case 's': return Point(this->location.x,this->location.y+1);
+        case 'd': return Point(this->location.x+1,this->location.y);
+        default: return Point(this->location.x,this->location.y);
+      }
+    }
+    
+    void Move_to(Point p)
+    {
+      this->location.x = p.x;
+      this->location.y = p.y;
+    }
+    int Perform(int action)
+    {
+      switch(action)
+      {
+        case 'd':
+          break;
+        case 'a':
+          break;
+        case 's':
+          break;
+        case 'w':
+          break;
+        default:
+          break;
+      }
+      return action;
+    }
 };
 class Monster: Creature
 {

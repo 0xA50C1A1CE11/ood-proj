@@ -30,6 +30,7 @@ inline int from_range(int initial,int min,int max)
 
 #define Floor 0
 #define Wall 1
+#define Tunnel 2
 
 
 struct Point
@@ -121,6 +122,41 @@ class Map
     }
 
 
+    void drawPlayer(Point location)
+    {
+      system("clear");
+      char ** shot = new char*[this->height+1];
+      for(int i=0;i<=this->height+1;i++)
+      {
+        shot[i] = new char[width+1];
+        for(int j=0;j<=this->width+1;j++)
+          shot[i][j] = drawRule(this->terrian[i][j]);
+      }
+      shot[location.y][location.x] = '@';
+      for(int i=0;i<=this->height+1;i++)
+      {
+        for(int j=0;j<=this->width+1;j++)
+        {
+          std::cout<<shot[i][j];
+        }
+        std::cout<<std::endl;
+      }
+    }
+
+
+    Point randomPoint()
+    {
+      Room rand_room = this->roomV[rand() % this->roomV.size()]->room;
+      int x_max = rand_room.botRight.x,
+          x_min = rand_room.topLeft.x,
+          y_max = rand_room.botRight.y,
+          y_min = rand_room.topLeft.y;
+      int x = from_range(x_min,x_min,x_max),
+          y = from_range(y_min,y_min,y_max);
+      return Point(x,y);
+    }
+
+
     void Clear()
     {
       for(int i=0;i<=this->height+1;i++)
@@ -128,23 +164,18 @@ class Map
           this->terrian[i][j] = Wall;
     }
 
-    
-    /* for testing */
-    void TEST(int min_box_sz,int min_rm_sz)
+    bool legalMove(int x, int y)
     {
-      BSPGen(min_box_sz,min_rm_sz);
-      for(int i=0;i <= this->height+1; i++)
-      {
-        for(int j=0;j <= this->width+1; j++)
-        {
-          std::cout << ((this->terrian[i][j]==Floor)? ".": "#");
-        }
-        std::cout<<std::endl;
-      }
+      return this->terrian[y][x]==Tunnel or
+             this->terrian[y][x]==Floor;
     }
-    void ROUTETEST(int ey,int ex,int y,int x)
+    void makeMap(int a,int b)
     {
-      this->BuildRoute(ey,ex,y,x);
+      this->BSPGen(a,b);
+    }
+    bool checkMove(Point p)
+    {
+      return this->terrian[p.y][p.x]==Floor or this->terrian[p.y][p.x]==Tunnel;
     }
 
     ~Map()
@@ -270,19 +301,19 @@ class Map
             up  = MAX(a_rand_x,b_rand_x);
 
         for(int i=low;i<=up;i++)
-          this->terrian[h_break_dot][i] = Floor;
+          this->terrian[h_break_dot][i] = Tunnel;
 
             low = MIN(a_rand_y,h_break_dot),
             up  = MAX(a_rand_y,h_break_dot);
 
         for(int i=low;i<=up;i++)
-          this->terrian[i][a_rand_x] = Floor;
+          this->terrian[i][a_rand_x] = Tunnel;
 
             low = MIN(b_rand_y,h_break_dot),
             up  = MAX(b_rand_y,h_break_dot);
 
         for(int i=low;i<=up;i++)
-          this->terrian[i][b_rand_x] = Floor;
+          this->terrian[i][b_rand_x] = Tunnel;
       }
       else
       {
@@ -294,19 +325,19 @@ class Map
             up  = MAX(a_rand_y,b_rand_y);
 
         for(int i=low;i<=up;i++)
-          this->terrian[i][v_break_dot] = Floor;
+          this->terrian[i][v_break_dot] = Tunnel;
 
             low = MIN(a_rand_x,v_break_dot),
             up  = MAX(a_rand_x,v_break_dot);
 
         for(int i=low;i<=up;i++)
-          this->terrian[a_rand_y][i] = Floor;
+          this->terrian[a_rand_y][i] = Tunnel;
 
             low = MIN(b_rand_x,v_break_dot),
             up  = MAX(b_rand_x,v_break_dot);
 
         for(int i=low;i<=up;i++)
-          this->terrian[b_rand_y][i] = Floor;
+          this->terrian[b_rand_y][i] = Tunnel;
       }
     }
 
@@ -343,24 +374,22 @@ class Map
       this->BSsplit(min_box_sz,min_room_sz,this->roomT);
 
       /* collect leafs aka single rooms */
-      std::vector <RoomTree*> leafs;
-      LeafsCollect(this->roomT,leafs);
+      LeafsCollect(this->roomT,this->roomV);
 
       /* clear treeian */
       this->Clear();
 
-      /* draw rooms... */
-      for(int i=0;i<leafs.size();i++)
-        DrawRoom(leafs[i]);
-
-      /* ... and connection between them*/
-      int sz = 0;
-
-      while((sz = leafs.size())-1)
+      /* draw connection between rooms */
+      int sz = this->roomV.size()-1;
+      
+      while(sz)
       {
-        ConnectRooms(leafs[sz-1],leafs[sz-2]);
-        leafs.pop_back();
+        ConnectRooms(this->roomV[--sz],this->roomV[sz]);
       }
+      
+      /* then draw rooms themselves */
+      for(int i=0;i<this->roomV.size();i++)
+        DrawRoom(this->roomV[i]);
     }
     
     
@@ -377,11 +406,11 @@ class Map
     void BuildRoute(int end_y, int end_x, int y,int x)
     {
       int **matr = new int*[this->height+1];
-      for(int i=0;i <= this->height;i++)
-        matr[i] = new int[this->width];
-      for(int i=0;i<=this->height;i++)
-        for(int j=0;j<=this->width;j++)
-          matr[i][j] = (terrian[i][j]==0)? -2: -1;
+      for(int i=0;i <= this->height+1;i++)
+        matr[i] = new int[this->width+1];
+      for(int i=0;i<=this->height+1;i++)
+        for(int j=0;j<=this->width+1;j++)
+          matr[i][j] = (terrian[i][j]==0 or terrian[i][j]==2)? -2: -1;
       matr[y][x] = 0;
       int dx[] = {1,0,-1,0},
           dy[] = {0,1,0,-1};
@@ -419,13 +448,46 @@ class Map
       for(Route *q = r; q; q=q->next)
         matr[q->point.y][q->point.x] = 0;
 
-      for(int i=0;i<=this->height;i++)
+      for(int i=0;i <= this->height+1; i++)
       {
-        for(int j=0;j<=this->width;j++)
+        for(int j=0;j <= this->width+1; j++)
         {
-          printf("%3i",matr[i][j]);
+          std::cout << ((matr[i][j]==-1)? '#': (matr[i][j]==0)? '.': ' ');
         }
         std::cout<<std::endl;
       }
     };
+    
+    inline bool isIn(int dot_x,int dot_y,RoomTree* node)
+    {
+      return dot_x <= node->room.botRight.x and
+             dot_x >= node->room.topLeft.x and
+             dot_y <= node->room.botRight.x and
+             dot_y >= node->room.topLeft.y;
+    }
+    /* returns rectangle where certain creature may see objects */
+    Room ReturnLOS(int obj_x, int obj_y)
+    {
+      if(this->terrian[obj_y][obj_x]==Tunnel)
+      {
+        return Room(obj_x-1,obj_y-1,obj_x+1,obj_y+1);
+      }
+      else
+      {
+        int i=0;
+        /*throws exception object insnt belong to any room nor any tunnel
+          by exceeding vectors size*/
+        while(not (isIn(obj_x,obj_y,this->roomV[i++])));
+        return this->roomV[i]->room;
+      }
+    }
+    char drawRule(int num)
+    {
+      switch(num)
+      {
+        case Tunnel: return '.';
+        case Floor: return '.';
+        case Wall : return '#';
+      }
+    }
 };
