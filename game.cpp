@@ -2,11 +2,12 @@
 #include "creature.h"
 #include <stdio.h>
 #include <iostream>
+#include <vector>
 class GameMaster
 {
   private:
     Player *player;
-    //Creatures list
+    std::vector <Monster*> monsters;
     Map *map;
   public:
     GameMaster()
@@ -18,9 +19,18 @@ class GameMaster
     {
       map->makeMap(10,4);
       this->player->Move_to(this->map->randomPoint());
+      for(int i = 0;i<8;i++)
+      {
+        Point spawn = this->map->randomPoint(),
+              reach = this->map->randomPoint();
+        this->monsters.push_back(new Monster(spawn.y,spawn.x));
+        this->map->BuildRoute(spawn.y,spawn.x,reach.y,reach.x,this->monsters.back()->route);
+        this->map->Chain(this->monsters.back()->route);
+      }
     }
     void Loop()
     {
+      this->CreateMap();
       for(;;)
       {
         int c = getc(stdin);
@@ -29,8 +39,12 @@ class GameMaster
         {
           player->Move_to(end);
         }
-        map->drawPlayer(this->player->location);
-        //all creatures perform their move
+        for(int i=0;i<this->monsters.size();i++)
+          this->monsters[i]->step();
+        Point * mnsters = new Point[8];
+        for(int i=0;i<this->monsters.size();i++)
+          mnsters[i] = this->monsters[i]->location;
+        map->drawPlayer(this->player->location,mnsters,8);
       }
     }
 };
@@ -38,7 +52,6 @@ int
 main()
 {
   auto g = GameMaster();
-  g.CreateMap();
   g.Loop();
   return 0;
 }

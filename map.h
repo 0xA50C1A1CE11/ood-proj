@@ -10,7 +10,6 @@
 #include <vector>
 #include <stdio.h>
 
-
 /* 
   Following section containts representation of terrian objects.
   Since map is almost entirely filled with terrian objects and there is
@@ -97,7 +96,8 @@ struct Route
   Route *next;
   Route(int y,int x)
   {
-    this->point = Point(x,y);
+    this->point.x = x;
+    this->point.y = y;
     this->next = NULL;
   }
 };
@@ -122,7 +122,7 @@ class Map
     }
 
 
-    void drawPlayer(Point location)
+    void drawPlayer(Point p_location,Point * monsters, int sz)
     {
       system("clear");
       char ** shot = new char*[this->height+1];
@@ -132,7 +132,9 @@ class Map
         for(int j=0;j<=this->width+1;j++)
           shot[i][j] = drawRule(this->terrian[i][j]);
       }
-      shot[location.y][location.x] = '@';
+      shot[p_location.y][p_location.x] = '@';
+      for(int i=0;i<sz;i++)
+        shot[monsters[i].y][monsters[i].x]='m';
       for(int i=0;i<=this->height+1;i++)
       {
         for(int j=0;j<=this->width+1;j++)
@@ -190,10 +192,30 @@ class Map
       return this->terrian[y][x]==Tunnel or
              this->terrian[y][x]==Floor;
     }
+
+    void Chain(Route* r)
+    {
+      std::vector<Point> v;
+      Route *t = r;
+      while( t->next!=nullptr )
+      {
+        v.push_back(t->point);
+        t=t->next;
+      }
+      for(int i=v.size();i;i--)
+      {
+        Point p = v[i];
+        if(p.x!=0 and p.y!=0)
+          t = (t->next = new Route(p.y,p.x));
+      }
+      t->next = r;
+    }
+
     void makeMap(int a,int b)
     {
       this->BSPGen(a,b);
     }
+
     bool checkMove(Point p)
     {
       return this->terrian[p.y][p.x]==Floor or this->terrian[p.y][p.x]==Tunnel;
@@ -207,6 +229,62 @@ class Map
       delete this->roomT;
     }
 
+    void BuildRoute(int end_y, int end_x, int y,int x, Route* &r)
+    {
+      int **matr = new int*[this->height+1];
+      for(int i=0;i <= this->height+1;i++)
+        matr[i] = new int[this->width+1];
+      for(int i=0;i<=this->height+1;i++)
+        for(int j=0;j<=this->width+1;j++)
+          matr[i][j] = (terrian[i][j]==0 or terrian[i][j]==2)? -2: -1;
+      matr[y][x] = 0;
+      int dx[] = {1,0,-1,0},
+          dy[] = {0,1,0,-1};
+      int d=0;
+      bool proceed = true;
+      while(matr[end_y][end_x]==-2 and proceed)
+      {
+        proceed = false;
+        for(int i=0;i<this->height;++i)
+        {
+          for(int j=0;j<this->width;++j)
+          {
+            if(matr[i][j]==d)
+            {
+              for(int k=0;k<4;k++)
+              {
+                int iy = i + dy[k],
+                    ix = j + dx[k];
+                if ( iy >= 0 and iy < this->height and
+                     ix >= 0 and ix < this->width and
+                    matr[iy][ix] == -2)
+                {
+                  proceed = true;
+                  matr[iy][ix] = d + 1;
+                }
+              }
+            }
+          }
+        }
+        d++;
+      }
+      this->RouteCollector(matr,end_y,end_x,r);
+
+      /*Route* t = new Route(end_y,end_x);
+      this->RouteCollector(matr,end_y,end_x,t);
+      for(Route *q = t; q; q=q->next)
+        matr[q->point.y][q->point.x] = 0;
+      for(int i=0;i <= this->height+1; i++)
+      {
+        for(int j=0;j <= this->width+1; j++)
+        {
+          std::cout << ((matr[i][j]==-1)? '#': (matr[i][j]==0)? '.': ' ');
+        }
+        std::cout<<std::endl;
+      }
+      std::cout<<std::endl;*/
+    };
+
 
   private:
 
@@ -214,8 +292,6 @@ class Map
     int **terrian,height,width;
     RoomTree *roomT;
     std::vector<RoomTree *> roomV;
-    //Creature **monsters;
-    //Creature *player;
 
     /*
        Simple binary space partitation alghorithm, capable only for 
@@ -414,71 +490,16 @@ class Map
     }
     
     
-    void RouteCollector(int **m,int y,int x,Route *r)
+    void RouteCollector(int **m,int y,int x,Route *& r)
     {
       r->next = new Route(y,x);
       if(m[y][x]==0) return;
       int dy = (m[y-1][x] == m[y][x]-1)? -1 :(m[y+1][x] == m[y][x]-1)? 1: 0,
-          dx = (dy != 0)? 0 :(m[y+1][x] == m[y][x]-1)? -1: +1;
+          dx = (dy != 0)? 0 : (m[y][x-1] == m[y][x]-1)? -1: +1;
       RouteCollector(m,y+dy,x+dx,r->next);
     }
-
-
-    void BuildRoute(int end_y, int end_x, int y,int x)
-    {
-      int **matr = new int*[this->height+1];
-      for(int i=0;i <= this->height+1;i++)
-        matr[i] = new int[this->width+1];
-      for(int i=0;i<=this->height+1;i++)
-        for(int j=0;j<=this->width+1;j++)
-          matr[i][j] = (terrian[i][j]==0 or terrian[i][j]==2)? -2: -1;
-      matr[y][x] = 0;
-      int dx[] = {1,0,-1,0},
-          dy[] = {0,1,0,-1};
-      int d=0;
-      bool proceed = true;
-      while(matr[end_y][end_x]==-2 and proceed)
-      {
-        proceed = false;
-        for(int i=0;i<this->height;++i)
-        {
-          for(int j=0;j<this->width;++j)
-          {
-            if(matr[i][j]==d)
-            {
-              for(int k=0;k<4;k++)
-              {
-                int iy = i + dy[k],
-                    ix = j + dx[k];
-                if ( iy >= 0 and iy < this->height and
-                     ix >= 0 and ix < this->width and
-                    matr[iy][ix] == -2)
-                {
-                  proceed = true;
-                  matr[iy][ix] = d + 1;
-                }
-              }
-            }
-          }
-        }
-        d++;
-      }
-
-      Route* r = new Route(end_y,end_x);
-      this->RouteCollector(matr,end_y,end_x,r);
-      for(Route *q = r; q; q=q->next)
-        matr[q->point.y][q->point.x] = 0;
-
-      for(int i=0;i <= this->height+1; i++)
-      {
-        for(int j=0;j <= this->width+1; j++)
-        {
-          std::cout << ((matr[i][j]==-1)? '#': (matr[i][j]==0)? '.': ' ');
-        }
-        std::cout<<std::endl;
-      }
-    };
     
+
     inline bool isIn(int dot_x,int dot_y,RoomTree* node)
     {
       return dot_x <= node->room.botRight.x and
@@ -486,21 +507,6 @@ class Map
              dot_y <= node->room.botRight.x and
              dot_y >= node->room.topLeft.y;
     }
-    /* returns rectangle where certain creature may see objects */
-    Room ReturnLOS(int obj_x, int obj_y)
-    {
-      if(this->terrian[obj_y][obj_x]==Tunnel)
-      {
-        return Room(obj_x-1,obj_y-1,obj_x+1,obj_y+1);
-      }
-      else
-      {
-        int i=0;
-        /*throws exception object insnt belong to any room nor any tunnel
-          by exceeding vectors size*/
-        while(not (isIn(obj_x,obj_y,this->roomV[i++])));
-        return this->roomV[i]->room;
-      }
     }
     char drawRule(int num)
     {

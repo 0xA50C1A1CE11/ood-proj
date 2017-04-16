@@ -58,8 +58,20 @@ class Player: Creature
 class Monster: Creature
 {
   public:
-    int state;
+    Point location;
     Route *route;
+    Monster(int y,int x)
+    {
+      this->location.x = x;
+      this->location.y = y;
+      this->route = new Route(y,x);
+    }
+    void step()
+    {
+      this->location.y = this->route->point.y;
+      this->location.x = this->route->point.x;
+      this->route = this->route->next;
+    }
 };
 /* 
   TODO: 
